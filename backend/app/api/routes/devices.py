@@ -1,10 +1,22 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from app.services.device_service import get_device
 from app.core.exceptions import DeviceNotFoundError
 from app.schemas.device import DeviceCreate, DeviceUpdate, DeviceResponse
 from app.services import device_service
 
-router = APIRouter(prefix="/devices", tags=["devices"])
+# 路由级依赖函数：校验请求头 Token
+def verify_device_token(x_device_token: str = Header("default-token")):
+    if x_device_token != "secret-device-key":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="Invalid Device Token"
+        )
+
+router = APIRouter(
+    prefix="/devices",
+    tags=["设备管理"],
+    dependencies=[Depends(verify_device_token)]  # 此路由下的所有接口都会触发 token 校验
+)
 @router.get("", response_model=list[DeviceResponse])
 def list_devices():
     return device_service.list_devices()
