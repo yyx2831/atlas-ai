@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.deps import User, get_current_user, require_admin
+from app.dependencies import User, get_current_user, require_admin
 
 router = APIRouter(prefix="/me", tags=["当前用户（演示 DI）"])
 

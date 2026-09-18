@@ -14,7 +14,7 @@ from pydantic import BaseModel
 class User(BaseModel):
     """当前登录用户模型。
 
-    真实项目里通常会把它挪到 app/schemas/user.py，这里为教学自包含放在 deps 里。
+    真实项目里通常会把它挪到 app/schemas/user.py，这里为教学自包含放在 dependencies 里。
     """
 
     id: int

@@ -9,12 +9,18 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]>=0.141.1",
+    "httpx>=0.28.1",
     "sqlalchemy>=2.0.54",
+    "tenacity>=9.1.4",
 ]
-
-[project.scripts]
-backend = "backend:main"
 
 [build-system]
 requires = ["uv_build>=0.12.6,<0.13.0"]
 build-backend = "uv_build"
+
+# The importable package is the `app/` directory at the project root (flat layout),
+# but the project name is `backend`. Tell uv_build where the module actually lives
+# instead of letting it look for `src/backend/` (which we removed).
+[tool.uv.build-backend]
+module-name = "app"
+module-root = ""
