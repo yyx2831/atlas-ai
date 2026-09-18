@@ -4,6 +4,7 @@ from .api.routes import devices
 from fastapi.responses import JSONResponse
 from app.core.exceptions import DeviceNotFoundError
 from app.api.routes import health_router, users_router, devices_router
+from app.api.routes import protected
 
 app = FastAPI(
     title="Atlas AI API",
@@ -15,6 +16,7 @@ app.include_router(devices.router)
 app.include_router(health_router)
 app.include_router(users_router)
 app.include_router(devices_router)
+app.include_router(protected.router)
 @app.get("/", include_in_schema=False)
 def root():
     return {"message": "Welcome to Atlas AI API. Visit /docs for OpenAPI documentation."}
