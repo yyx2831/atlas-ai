@@ -53,3 +53,13 @@ docs/
 - 路由共 **11 组**接口（见 `modules/routing.md`），全部注册在 `/docs`（OpenAPI）。
 - `device_service` 仍是**内存假数据**，未接 DB（见 `modules/services.md` 的「待办」）。
 - 全局异常处理器已兜住未捕获异常，生产环境建议改为只捕获自定义业务异常基类（见 `modules/error-handling.md`）。
+
+## 180 天学习教程
+
+从 [学习入口](tutorial/START-HERE.md) 接续已有代码；[完整逐日教程](tutorial/README.md) 包含 180 课、操作步骤、验收与故障实验。
+
+- [进度记录](tutorial/PROGRESS.md)：不根据已有代码自动认定掌握。
+- [数据库衔接实验](tutorial/labs/database-bridge.md)：Day 14～21 完整参考。
+- [环境约定](tutorial/ENVIRONMENT.md) 与 [官方资料](tutorial/SOURCES.md)。
+
+教程中的目标实现与当前运行代码分开：当前设备 CRUD 仍在内存，教程不会自动完成数据库迁移。

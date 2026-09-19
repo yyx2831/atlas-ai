@@ -94,3 +94,23 @@ atlas-ai/                              ← 仓库根
 - 找某函数/类定义 → `../generated/repo-map.md`（按文件列出 `def` / `class`）。
 - 找某路由路径 → `../modules/routing.md`（按 tag 分组列出全部端点）。
 - 找「为什么这么设计」→ `../architecture/overview.md` 与 `../modules/*.md` 的「注意事项」。
+
+## 学习教程目录（新增）
+
+`docs/tutorial/` 是面向学习者的教程，不替代上方反映当前源码的模块文档。
+
+```text
+docs/tutorial/
+├── README.md                 # 180 课导航
+├── START-HERE.md             # 已有代码衔接与建议起点
+├── PROGRESS.md               # 学习者自行验收的进度
+├── ENVIRONMENT.md            # Windows / WSL / 路径与数据约定
+├── SOURCES.md                # 官方资料与核查范围
+├── original-plan.md          # 用户原始计划备份
+├── days/day-001.md … day-180.md
+├── labs/database-bridge.md   # Day 14～21 参考实验
+├── labs/key-recipes.md       # 关键代码与配置示例
+└── templates/daily-note.md   # 每日学习记录模板
+```
+
+本次仅新增教程与导航，没有增删业务源码或改变签名，因此保留 `docs/generated/repo-map.md` 的源码地图内容。

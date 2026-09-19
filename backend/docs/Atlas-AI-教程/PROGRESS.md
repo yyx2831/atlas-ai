@@ -1,0 +1,188 @@
+# 学习进度
+
+状态只由你验收后更新。代码存在 ≠ 独立掌握；截至 2026-09-19 的静态检查不能代替实操成绩。
+
+建议下一课：Day 14 接力验收，然后 Day 15。已有部分 Day 19 的 ORM 和 Day 9 的 Session 依赖。未发现完整的逐日学习记录，不自动打勾。
+
+状态可填写：未开始 / 练习中 / 待验收 / 已通过 / 硬件待补。每次附笔记链接或提交哈希。
+
+- [ ] [Day 001 接管现有工程与运行环境](days/day-001.md) — 未确认；存在相关实现，待独立验收；证据：
+- [ ] [Day 002 Python 类型与容器](days/day-002.md) — 未确认；存在相关实现，待独立验收；证据：
+- [ ] [Day 003 函数、控制流与边界](days/day-003.md) — 未确认；存在相关实现，待独立验收；证据：
+- [ ] [Day 004 模块与包](days/day-004.md) — 未确认；存在相关实现，待独立验收；证据：
+- [ ] [Day 005 业务异常与 HTTP 异常](days/day-005.md) — 未确认；存在相关实现，待独立验收；证据：
+- [ ] [Day 006 Pydantic 与真正生效的校验](days/day-006.md) — 未确认；存在相关实现，待独立验收；证据：
+- [ ] [Day 007 内存 CRUD 闭卷复盘](days/day-007.md) — 未确认；存在相关实现，待独立验收；证据：
+- [ ] [Day 008 Router 与应用装配](days/day-008.md) — 未确认；存在相关实现，待独立验收；证据：
+- [ ] [Day 009 依赖注入与 Session 生命周期](days/day-009.md) — 未确认；存在相关实现，待独立验收；证据：
+- [ ] [Day 010 异步、串行与并发](days/day-010.md) — 未确认；存在相关实现，待独立验收；证据：
+- [ ] [Day 011 HTTPX 与外部故障](days/day-011.md) — 未确认；存在相关实现，待独立验收；证据：
+- [ ] [Day 012 可关联的应用日志](days/day-012.md) — 未确认；存在相关实现，待独立验收；证据：
+- [ ] [Day 013 中间件与上下文](days/day-013.md) — 未确认；存在相关实现，待独立验收；证据：
+- [ ] [Day 014 现有项目接力验收](days/day-014.md) — 未确认；存在相关实现，待独立验收；证据：
+- [ ] [Day 015 PostgreSQL 与原生 SQL](days/day-015.md) — 未确认；证据：
+- [ ] [Day 016 JOIN 与告警聚合](days/day-016.md) — 未确认；证据：
+- [ ] [Day 017 索引与执行计划](days/day-017.md) — 未确认；证据：
+- [ ] [Day 018 事务与回滚](days/day-018.md) — 未确认；证据：
+- [ ] [Day 019 SQLAlchemy 2.0 与显式 Session](days/day-019.md) — 未确认；存在相关实现，待独立验收；证据：
+- [ ] [Day 020 Alembic 与可追踪结构变更](days/day-020.md) — 未确认；证据：
+- [ ] [Day 021 让设备 CRUD 真正落库](days/day-021.md) — 未确认；证据：
+- [ ] [Day 022 Linux 文件与路径](days/day-022.md) — 未确认；证据：
+- [ ] [Day 023 Linux 权限](days/day-023.md) — 未确认；证据：
+- [ ] [Day 024 进程与终止](days/day-024.md) — 未确认；证据：
+- [ ] [Day 025 监听地址与端口](days/day-025.md) — 未确认；证据：
+- [ ] [Day 026 网络请求的一次旅行](days/day-026.md) — 未确认；证据：
+- [ ] [Day 027 systemd 托管服务](days/day-027.md) — 未确认；证据：
+- [ ] [Day 028 SSH 与远程连接](days/day-028.md) — 未确认；证据：
+- [ ] [Day 029 无 Docker 部署](days/day-029.md) — 未确认；证据：
+- [ ] [Day 030 第一个月实战考试](days/day-030.md) — 未确认；证据：
+- [ ] [Day 031 Docker 的镜像与容器](days/day-031.md) — 未确认；证据：
+- [ ] [Day 032 为后端写 Dockerfile](days/day-032.md) — 未确认；证据：
+- [ ] [Day 033 容器内外的排障](days/day-033.md) — 未确认；证据：
+- [ ] [Day 034 Volume 与持久化](days/day-034.md) — 未确认；证据：
+- [ ] [Day 035 Docker 网络与服务名](days/day-035.md) — 未确认；证据：
+- [ ] [Day 036 Compose 组织多服务](days/day-036.md) — 未确认；证据：
+- [ ] [Day 037 启动顺序与就绪探针](days/day-037.md) — 未确认；证据：
+- [ ] [Day 038 Nginx 反向代理](days/day-038.md) — 未确认；证据：
+- [ ] [Day 039 Vue 静态资源与 API 同源](days/day-039.md) — 未确认；证据：
+- [ ] [Day 040 HTTPS 与证书验证](days/day-040.md) — 未确认；证据：
+- [ ] [Day 041 模型 API 与应用边界](days/day-041.md) — 未确认；证据：
+- [ ] [Day 042 SSE 流式响应](days/day-042.md) — 未确认；证据：
+- [ ] [Day 043 会话与消息持久化](days/day-043.md) — 未确认；证据：
+- [ ] [Day 044 Provider 接口与替换能力](days/day-044.md) — 未确认；证据：
+- [ ] [Day 045 Token、时延与成本记录](days/day-045.md) — 未确认；证据：
+- [ ] [Day 046 Embedding 的几何表示](days/day-046.md) — 未确认；证据：
+- [ ] [Day 047 余弦相似度与排序](days/day-047.md) — 未确认；证据：
+- [ ] [Day 048 Qdrant 的集合与点](days/day-048.md) — 未确认；证据：
+- [ ] [Day 049 文档解析与统一中间格式](days/day-049.md) — 未确认；证据：
+- [ ] [Day 050 PDF 解析与页码来源](days/day-050.md) — 未确认；证据：
+- [ ] [Day 051 切块与重叠](days/day-051.md) — 未确认；证据：
+- [ ] [Day 052 可重试的索引流水线](days/day-052.md) — 未确认；证据：
+- [ ] [Day 053 查询检索接口](days/day-053.md) — 未确认；证据：
+- [ ] [Day 054 手写最小 RAG](days/day-054.md) — 未确认；证据：
+- [ ] [Day 055 引用与可核验回答](days/day-055.md) — 未确认；证据：
+- [ ] [Day 056 建立三十题评测集](days/day-056.md) — 未确认；证据：
+- [ ] [Day 057 Badcase 分层定位](days/day-057.md) — 未确认；证据：
+- [ ] [Day 058 Top-K 的质量与成本](days/day-058.md) — 未确认；证据：
+- [ ] [Day 059 Metadata 筛选与权限边界](days/day-059.md) — 未确认；证据：
+- [ ] [Day 060 第二月完整 RAG 验收](days/day-060.md) — 未确认；证据：
+- [ ] [Day 061 关键词与 BM25](days/day-061.md) — 未确认；证据：
+- [ ] [Day 062 混合检索与 RRF](days/day-062.md) — 未确认；证据：
+- [ ] [Day 063 Reranker 的职责](days/day-063.md) — 未确认；证据：
+- [ ] [Day 064 上下文问题改写](days/day-064.md) — 未确认；证据：
+- [ ] [Day 065 Multi-query 与合并](days/day-065.md) — 未确认；证据：
+- [ ] [Day 066 检索指标的严格定义](days/day-066.md) — 未确认；证据：
+- [ ] [Day 067 生成质量评测](days/day-067.md) — 未确认；证据：
+- [ ] [Day 068 RAG 可观测链路](days/day-068.md) — 未确认；证据：
+- [ ] [Day 069 组合 RAG v2](days/day-069.md) — 未确认；证据：
+- [ ] [Day 070 RAG v2 设计复盘](days/day-070.md) — 未确认；证据：
+- [ ] [Day 071 Tool Calling 的消息协议](days/day-071.md) — 未确认；证据：
+- [ ] [Day 072 安全的 Tool Executor](days/day-072.md) — 未确认；证据：
+- [ ] [Day 073 设备与告警两个工具](days/day-073.md) — 未确认；证据：
+- [ ] [Day 074 受限统计 SQL 工具](days/day-074.md) — 未确认；证据：
+- [ ] [Day 075 把知识库封装成工具](days/day-075.md) — 未确认；证据：
+- [ ] [Day 076 手写有界 Agent Loop](days/day-076.md) — 未确认；证据：
+- [ ] [Day 077 工具失败的业务表达](days/day-077.md) — 未确认；证据：
+- [ ] [Day 078 Agent State 与会话隔离](days/day-078.md) — 未确认；证据：
+- [ ] [Day 079 用 LangGraph 表达工作流](days/day-079.md) — 未确认；证据：
+- [ ] [Day 080 条件边与状态路由](days/day-080.md) — 未确认；证据：
+- [ ] [Day 081 Checkpoint 与恢复](days/day-081.md) — 未确认；证据：
+- [ ] [Day 082 人工确认与设备操作](days/day-082.md) — 未确认；证据：
+- [ ] [Day 083 可观察步骤与前端时间线](days/day-083.md) — 未确认；证据：
+- [ ] [Day 084 MCP 的角色与边界](days/day-084.md) — 未确认；证据：
+- [ ] [Day 085 第一个 MCP Server](days/day-085.md) — 未确认；证据：
+- [ ] [Day 086 多工具契约与协议版本](days/day-086.md) — 未确认；证据：
+- [ ] [Day 087 Agent 接入 MCP Adapter](days/day-087.md) — 未确认；证据：
+- [ ] [Day 088 工具权限与审批校验](days/day-088.md) — 未确认；证据：
+- [ ] [Day 089 综合故障助手](days/day-089.md) — 未确认；证据：
+- [ ] [Day 090 第三月闭卷验收](days/day-090.md) — 未确认；证据：
+- [ ] [Day 091 推理、训练与微调](days/day-091.md) — 未确认；证据：
+- [ ] [Day 092 参数量与权重占用](days/day-092.md) — 未确认；证据：
+- [ ] [Day 093 精度与量化](days/day-093.md) — 未确认；证据：
+- [ ] [Day 094 GPU 的资源维度](days/day-094.md) — 未确认；证据：
+- [ ] [Day 095 nvidia-smi 实操](days/day-095.md) — 未确认；证据：
+- [ ] [Day 096 Driver、Runtime 与 Toolkit](days/day-096.md) — 未确认；证据：
+- [ ] [Day 097 Ollama 本地模型](days/day-097.md) — 未确认；证据：
+- [ ] [Day 098 兼容 API 的能力测试](days/day-098.md) — 未确认；证据：
+- [ ] [Day 099 首 token 与输出速度](days/day-099.md) — 未确认；证据：
+- [ ] [Day 100 并发与排队](days/day-100.md) — 未确认；证据：
+- [ ] [Day 101 部署 vLLM 服务](days/day-101.md) — 未确认；证据：
+- [ ] [Day 102 Atlas 接入 vLLM](days/day-102.md) — 未确认；证据：
+- [ ] [Day 103 KV Cache 与上下文](days/day-103.md) — 未确认；证据：
+- [ ] [Day 104 Batching 与吞吐取舍](days/day-104.md) — 未确认；证据：
+- [ ] [Day 105 受控 OOM 与恢复](days/day-105.md) — 未确认；证据：
+- [ ] [Day 106 模型选择报告](days/day-106.md) — 未确认；证据：
+- [ ] [Day 107 容器中的 NVIDIA GPU](days/day-107.md) — 未确认；证据：
+- [ ] [Day 108 容器化 vLLM](days/day-108.md) — 未确认；证据：
+- [ ] [Day 109 模型缓存与离线目录](days/day-109.md) — 未确认；证据：
+- [ ] [Day 110 推理服务的网络边界](days/day-110.md) — 未确认；证据：
+- [ ] [Day 111 部署目录与配置职责](days/day-111.md) — 未确认；证据：
+- [ ] [Day 112 完整 Compose 系统](days/day-112.md) — 未确认；证据：
+- [ ] [Day 113 环境配置与秘密](days/day-113.md) — 未确认；证据：
+- [ ] [Day 114 统一入口与路径契约](days/day-114.md) — 未确认；证据：
+- [ ] [Day 115 健康检查与重启策略](days/day-115.md) — 未确认；证据：
+- [ ] [Day 116 机器重启恢复演练](days/day-116.md) — 未确认；证据：
+- [ ] [Day 117 备份策略](days/day-117.md) — 未确认；证据：
+- [ ] [Day 118 真正恢复到新环境](days/day-118.md) — 未确认；证据：
+- [ ] [Day 119 升级与回滚边界](days/day-119.md) — 未确认；证据：
+- [ ] [Day 120 第四月空机部署验收](days/day-120.md) — 未确认；证据：
+- [ ] [Day 121 结构化日志](days/day-121.md) — 未确认；证据：
+- [ ] [Day 122 Prometheus 指标](days/day-122.md) — 未确认；证据：
+- [ ] [Day 123 Grafana 的请求视角](days/day-123.md) — 未确认；证据：
+- [ ] [Day 124 LLM 专项指标](days/day-124.md) — 未确认；证据：
+- [ ] [Day 125 RAG 阶段指标](days/day-125.md) — 未确认；证据：
+- [ ] [Day 126 GPU 监控](days/day-126.md) — 未确认；证据：
+- [ ] [Day 127 可执行告警](days/day-127.md) — 未确认；证据：
+- [ ] [Day 128 认证、授权与 CORS](days/day-128.md) — 未确认；证据：
+- [ ] [Day 129 文档提示注入实验](days/day-129.md) — 未确认；证据：
+- [ ] [Day 130 工具的最小权限](days/day-130.md) — 未确认；证据：
+- [ ] [Day 131 十五分钟定位 502](days/day-131.md) — 未确认；证据：
+- [ ] [Day 132 Connection refused](days/day-132.md) — 未确认；证据：
+- [ ] [Day 133 数据库连接故障](days/day-133.md) — 未确认；证据：
+- [ ] [Day 134 Redis 故障与能力分级](days/day-134.md) — 未确认；证据：
+- [ ] [Day 135 容器重启循环](days/day-135.md) — 未确认；证据：
+- [ ] [Day 136 磁盘空间与 inode](days/day-136.md) — 未确认；证据：
+- [ ] [Day 137 Volume 权限错误](days/day-137.md) — 未确认；证据：
+- [ ] [Day 138 DNS 故障](days/day-138.md) — 未确认；证据：
+- [ ] [Day 139 TLS 证书错误](days/day-139.md) — 未确认；证据：
+- [ ] [Day 140 SSE 不实时](days/day-140.md) — 未确认；证据：
+- [ ] [Day 141 nvidia-smi 不可用](days/day-141.md) — 未确认；证据：
+- [ ] [Day 142 容器看不到 GPU](days/day-142.md) — 未确认；证据：
+- [ ] [Day 143 GPU OOM 分类复盘](days/day-143.md) — 未确认；证据：
+- [ ] [Day 144 低 GPU 利用率](days/day-144.md) — 未确认；证据：
+- [ ] [Day 145 Token 输出越来越慢](days/day-145.md) — 未确认；证据：
+- [ ] [Day 146 离线依赖清单](days/day-146.md) — 未确认；证据：
+- [ ] [Day 147 镜像离线导入](days/day-147.md) — 未确认；证据：
+- [ ] [Day 148 Python 离线 wheel](days/day-148.md) — 未确认；证据：
+- [ ] [Day 149 模型离线加载](days/day-149.md) — 未确认；证据：
+- [ ] [Day 150 可重复安装脚本](days/day-150.md) — 未确认；证据：
+- [ ] [Day 151 客户需求访谈](days/day-151.md) — 未确认；证据：
+- [ ] [Day 152 MVP 范围与取舍](days/day-152.md) — 未确认；证据：
+- [ ] [Day 153 用户角色与对象权限](days/day-153.md) — 未确认；证据：
+- [ ] [Day 154 架构方案与边界](days/day-154.md) — 未确认；证据：
+- [ ] [Day 155 容量估算与实测修正](days/day-155.md) — 未确认；证据：
+- [ ] [Day 156 部署计划与回退条件](days/day-156.md) — 未确认；证据：
+- [ ] [Day 157 三十条验收用例](days/day-157.md) — 未确认；证据：
+- [ ] [Day 158 日常运维 Runbook](days/day-158.md) — 未确认；证据：
+- [ ] [Day 159 事故处置手册](days/day-159.md) — 未确认；证据：
+- [ ] [Day 160 完整交付演练](days/day-160.md) — 未确认；证据：
+- [ ] [Day 161 核心测试边界](days/day-161.md) — 未确认；证据：
+- [ ] [Day 162 pytest 的隔离与 fixture](days/day-162.md) — 未确认；证据：
+- [ ] [Day 163 持续集成入口](days/day-163.md) — 未确认；证据：
+- [ ] [Day 164 镜像构建流水线](days/day-164.md) — 未确认；证据：
+- [ ] [Day 165 版本与变更说明](days/day-165.md) — 未确认；证据：
+- [ ] [Day 166 面向使用者的 README](days/day-166.md) — 未确认；证据：
+- [ ] [Day 167 三张解释系统的图](days/day-167.md) — 未确认；证据：
+- [ ] [Day 168 三到五分钟 Demo](days/day-168.md) — 未确认；证据：
+- [ ] [Day 169 性能报告](days/day-169.md) — 未确认；证据：
+- [ ] [Day 170 安全措施与剩余风险](days/day-170.md) — 未确认；证据：
+- [ ] [Day 171 简历第一版](days/day-171.md) — 未确认；证据：
+- [ ] [Day 172 重写既有项目经历](days/day-172.md) — 未确认；证据：
+- [ ] [Day 173 Atlas 的六条项目描述](days/day-173.md) — 未确认；证据：
+- [ ] [Day 174 岗位样本分析](days/day-174.md) — 未确认；证据：
+- [ ] [Day 175 按证据补缺口](days/day-175.md) — 未确认；证据：
+- [ ] [Day 176 Kubernetes 基本对象](days/day-176.md) — 未确认；证据：
+- [ ] [Day 177 本地集群运行 FastAPI](days/day-177.md) — 未确认；证据：
+- [ ] [Day 178 Deployment、Service 与 ConfigMap](days/day-178.md) — 未确认；证据：
+- [ ] [Day 179 二十题模拟面试](days/day-179.md) — 未确认；证据：
+- [ ] [Day 180 最终客户场景考试](days/day-180.md) — 未确认；证据：
