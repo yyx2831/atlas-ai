@@ -30,7 +30,7 @@ router = APIRouter(
 )
 ```
 
-> 注意：路由里 `from app.services import device_service` 与 `from app.services.device_service import get_device` 混用，功能正常但略冗余；统一用 `device_service.xxx` 即可。
+五个设备端点使用 `DbSession = Annotated[Session, Depends(get_db)]`，再显式传给 service。冗余 get_device 导入已移除；路径、鉴权与状态码保持原有约定。
 
 ### protected.py —— `Annotated` 注入（推荐写法）
 

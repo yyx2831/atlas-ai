@@ -14,20 +14,29 @@ _(无顶层类/函数)_
 
 ## `app/database.py`
 
+> Day 19/21：连接配置与每请求一个 Session；导入时不建表。
+
 **imports**
 
 ```
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+import os
+from collections.abc import Iterator
+from pathlib import Path
+from sqlalchemy import create_engine, event
+from sqlalchemy.engine import Engine, make_url
+from sqlalchemy.orm import Session, sessionmaker
 from app.models import Base
 ```
 
 **symbols**
 
 ```
+DEFAULT_DB_PATH = ...
 DATABASE_URL = ...
+ def build_engine(url)
 engine = ...
 SessionLocal = ...
+ def init_db(bind)
  def get_db()
 ```
 
@@ -64,6 +73,8 @@ FAKE_USER = ...
 
 ```
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
+from app.database import init_db
 from app.api.router import register_routes
 from app.core.config import DESCRIPTION, TITLE, VERSION
 from app.core.exception_handlers import device_not_found_handler, global_exception_handler
@@ -74,6 +85,7 @@ from app.core.middleware import add_request_id, request_timing_middleware
 **symbols**
 
 ```
+@asynccontextmanager async def lifespan(app)
 app = ...
 ```
 
@@ -157,9 +169,10 @@ router = ...
 **imports**
 
 ```
+from typing import Annotated
+from sqlalchemy.orm import Session
+from app.database import get_db
 from fastapi import APIRouter, Depends, Header, HTTPException, status
-from app.services.device_service import get_device
-from app.core.exceptions import DeviceNotFoundError
 from app.schemas.device import DeviceCreate, DeviceUpdate, DeviceResponse
 from app.services import device_service
 ```
@@ -167,13 +180,14 @@ from app.services import device_service
 **symbols**
 
 ```
+DbSession = ...
  def verify_device_token(x_device_token)
 router = ...
-@<decorator> def list_devices()
-@<decorator> def get_device(device_id)
-@<decorator> def create_device(data)
-@<decorator> def update_device(device_id, data)
-@<decorator> def delete_device(device_id)
+@<decorator> def list_devices(db)
+@<decorator> def get_device(device_id, db)
+@<decorator> def create_device(data, db)
+@<decorator> def update_device(device_id, data, db)
+@<decorator> def delete_device(device_id, db)
 ```
 
 ---
@@ -349,6 +363,8 @@ from app.core.logging_config import logger, request_id_var
 ```
 from sqlalchemy.orm import declarative_base
 from app.models.device import Device
+from app.models.user import User
+from app.models.alarm import Alarm
 ```
 
 **symbols**
@@ -356,6 +372,30 @@ from app.models.device import Device
 ```
 Base = ...
 __all__ = ...
+```
+
+---
+
+## `app/models/alarm.py`
+
+> Day 16/19：设备一对多告警。
+
+**imports**
+
+```
+from datetime import datetime, timezone
+from typing import TYPE_CHECKING
+from sqlalchemy import DateTime, ForeignKey, Index, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.models import Base
+```
+
+**symbols**
+
+```
+class Alarm(Base):
+  __tablename__ = ...
+  __table_args__ = ...
 ```
 
 ---
@@ -368,7 +408,8 @@ __all__ = ...
 
 ```
 from sqlalchemy import Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import TYPE_CHECKING
 from app.models import Base
 ```
 
@@ -376,6 +417,27 @@ from app.models import Base
 
 ```
 class Device(Base):
+  __tablename__ = ...
+```
+
+---
+
+## `app/models/user.py`
+
+> Day 19：数据库用户示例；暂不替换现有假用户认证。
+
+**imports**
+
+```
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column
+from app.models import Base
+```
+
+**symbols**
+
+```
+class User(Base):
   __tablename__ = ...
 ```
 
@@ -405,7 +467,7 @@ __all__ = ...
 
 ```
 from enum import Enum
-from pydantic import BaseModel, Field, IPvAnyAddress, field_validator
+from pydantic import BaseModel, ConfigDict, Field, IPvAnyAddress, field_validator
 ```
 
 **symbols**
@@ -415,10 +477,12 @@ class DeviceType(str, Enum):
   router = ...
   switch = ...
   camera = ...
-@field_validator(...) @classmethod def name_not_blank(cls, v)
-class DeviceCreate(BaseModel):
-class DeviceUpdate(BaseModel):
+class DeviceNameValidation(BaseModel):
+  @field_validator(...) @classmethod def name_not_blank(cls, value)
+class DeviceCreate(DeviceNameValidation):
+class DeviceUpdate(DeviceNameValidation):
 class DeviceResponse(BaseModel):
+  model_config = ...
 ```
 
 ---
@@ -443,24 +507,28 @@ __all__ = ...
 
 ## `app/services/device_service.py`
 
+> Day 21：service 显式接收 Session；每个写操作拥有一个事务。
+
 **imports**
 
 ```
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+from app.models import Device
 from app.schemas.device import DeviceCreate, DeviceUpdate
 ```
 
 **symbols**
 
 ```
-_next_id = ...
  def calculate_total(prices)
  def group_devices(devices)
  def filter_alarm_devices(devices, level)
- def list_devices()
- def get_device(device_id)
- def create_device(data)
- def update_device(device_id, data)
- def delete_device(device_id)
+ def list_devices(db)
+ def get_device(device_id, db)
+ def create_device(data, db)
+ def update_device(device_id, data, db)
+ def delete_device(device_id, db)
 ```
 
 ---
@@ -470,6 +538,97 @@ _next_id = ...
 > 真正通用的小工具。
 
 _(无顶层类/函数)_
+
+---
+
+## `exercises/__init__.py`
+
+> 可独立运行的逐日实验，不自动修改业务数据库。
+
+_(无顶层类/函数)_
+
+---
+
+## `exercises/day019_orm.py`
+
+> uv run python -m exercises.day019_orm：临时库演示 ORM、JOIN 与事务。
+
+**imports**
+
+```
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from sqlalchemy import and_, func, select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+from app.core.logging_config import logger
+from app.database import build_engine, init_db
+from app.models import Alarm, Device, User
+```
+
+**symbols**
+
+```
+ def run_demo(url)
+```
+
+---
+
+## `tests/test_device_api.py`
+
+> 使用临时文件数据库；不连接或清空用户 app.db。
+
+**imports**
+
+```
+import os
+import subprocess
+import sys
+from pathlib import Path
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import select, func, event
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
+import app.main
+from app.database import build_engine, get_db, init_db
+from app.models import Alarm, Device, User
+from app.schemas.device import DeviceCreate
+from app.services import device_service
+```
+
+**symbols**
+
+```
+HEADERS = ...
+BODY = ...
+@fixture def db_engine(tmp_path)
+@fixture def client(db_engine, monkeypatch)
+ def test_crud_and_persistence(client, db_engine)
+ def test_guards_and_validation(client)
+ def test_failed_write_rolls_back_entire_transaction(db_engine)
+ def test_restarted_process_reads_same_database(tmp_path)
+```
+
+---
+
+## `tests/test_schemas.py`
+
+**imports**
+
+```
+import pytest
+from pydantic import ValidationError
+from app.schemas.device import DeviceCreate, DeviceUpdate
+```
+
+**symbols**
+
+```
+@<decorator> def test_blank_name_rejected(model)
+ def test_name_normalized()
+```
 
 ---
 

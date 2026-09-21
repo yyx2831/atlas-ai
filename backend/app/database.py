@@ -1,38 +1,42 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+"""Day 19/21：连接配置与每请求一个 Session；导入时不建表。"""
+import os
+from collections.abc import Iterator
+from pathlib import Path
+from sqlalchemy import create_engine, event
+from sqlalchemy.engine import Engine, make_url
+from sqlalchemy.orm import Session, sessionmaker
 from app.models import Base
 
+DEFAULT_DB_PATH = Path(__file__).resolve().parents[1] / 'app.db'
+DATABASE_URL = os.getenv('DATABASE_URL', f'sqlite:///{DEFAULT_DB_PATH.as_posix()}')
 
-DATABASE_URL = "sqlite:///./app.db"
+def build_engine(url: str) -> Engine:
+    parsed = make_url(url)
+    if parsed.drivername in ('postgres', 'postgresql'):
+        parsed = parsed.set(drivername='postgresql+psycopg')
+    sqlite = parsed.get_backend_name() == 'sqlite'
+    engine = create_engine(parsed, pool_pre_ping=True,
+                           connect_args={'check_same_thread': False} if sqlite else {})
+    if sqlite:
+        @event.listens_for(engine, 'connect')
+        def enable_foreign_keys(connection, _record):
+            cursor = connection.cursor()
+            cursor.execute('PRAGMA foreign_keys=ON')
+            cursor.close()
+    return engine
 
+engine = build_engine(DATABASE_URL)
+SessionLocal = sessionmaker(bind=engine, autoflush=False)
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={
-        "check_same_thread": False
-    },
-)
+def init_db(bind: Engine | None = None) -> None:
+    """只创建缺失表，不删除数据、不迁移已有列；Day 20 再学 Alembic。"""
+    Base.metadata.create_all(bind=bind if bind is not None else engine)
 
-# 学习阶段：应用启动时自动建表。
-# 生产环境请改用 Alembic 做数据库迁移，不要依赖 create_all。
-Base.metadata.create_all(bind=engine)
-
-
-SessionLocal = sessionmaker(
-    bind=engine,
-    autocommit=False,
-    autoflush=False,
-)
-
-
-def get_db() -> Session:
-    """依赖：每个请求创建一个 Session，请求结束后自动关闭。
-
-    用 yield 让 FastAPI 在请求结束时执行 finally 里的 db.close()，
-    把数据库连接归还给连接池，避免连接泄漏。
-    """
-    db = SessionLocal()
-    try:
+def get_db() -> Iterator[Session]:
+    with SessionLocal() as db:
         yield db
-    finally:
-        db.close()
+
+if __name__ == '__main__':
+    from app.core.logging_config import logger
+    init_db()
+    logger.info('数据库缺失表已创建（未修改已有表结构）')

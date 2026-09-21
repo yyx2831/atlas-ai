@@ -32,7 +32,7 @@
                     ┌──────┴───────┐        ┌────────┴────────┐
                     │ services      │        │ database         │
                     │ (业务逻辑)    │        │ engine/Session   │
-                    │ 当前内存假数据 │        └────────┬────────┘
+                    │ Session 持久化 │        └────────┬────────┘
                     └──────┬───────┘                 │
                            │                  ┌──────┴───────┐
                            │                  │ models (ORM)  │
@@ -46,8 +46,8 @@
 请求 → add_request_id（生成/透传 request_id，写入 request.state + contextvar）
      → request_timing_middleware（计时）
      → 路由端点（解析路径/查询/Body，经 Depends 注入 user / db）
-     → service（业务处理，当前内存）
-     → （未来）model 经 database 的 Session 读写 SQLite
+     → service（业务处理，显式 Session）
+     → model 经 Session 读写 SQLite / PostgreSQL
      → 响应 → request_timing_middleware（打印耗时日志）
             → add_request_id（把 request_id 写回响应头 X-Request-ID）
 ```
@@ -55,7 +55,7 @@
 ## 配置与元数据
 
 - 应用元数据：`core/config.py` 的 `TITLE` / `DESCRIPTION` / `VERSION`，被 `main.py` 用于 `FastAPI(...)`。
-- 数据库：`database.py` 的 `DATABASE_URL = "sqlite:///./app.db"`（相对运行目录），启动时 `Base.metadata.create_all` 建表。
+- 数据库：`database.py` 的 读取 DATABASE_URL 环境变量（默认固定 backend/app.db），lifespan 中 init_db 创建缺失表。
 - 日志：`logging_config.py` 配置 root logger（仅当无 handler 时），统一 `logger = logging.getLogger("app")`。
 
 ## 与「生产架构」的差异（当前是学习版）
@@ -64,7 +64,7 @@
 |---|---|---|
 | 鉴权 | 假用户 `FAKE_USER` | 真实 JWT / OAuth，查库校验 |
 | 建表 | `create_all` 启动时 | Alembic 迁移 |
-| 业务数据 | 内存 `_devices` 列表 | 走 `Device` 表 + `get_db` |
+| 业务数据 | Device 表 + get_db | 补分页、迁移与真实认证 |
 | 日志 | stdout | 文件 / 集中日志（ELK 等） |
 | 全局异常 | 捕获裸 `Exception` | 只捕获自定义业务异常基类 |
 | 路由前缀 | 无 `/api` | 通常加 `/api/v1` 版本前缀 |

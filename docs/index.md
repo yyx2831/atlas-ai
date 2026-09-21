@@ -51,7 +51,7 @@ docs/
 ## 当前工程状态速览
 
 - 路由共 **11 组**接口（见 `modules/routing.md`），全部注册在 `/docs`（OpenAPI）。
-- `device_service` 仍是**内存假数据**，未接 DB（见 `modules/services.md` 的「待办」）。
+- `device_service` 已接 SQLAlchemy 数据库，支持默认 SQLite 与环境配置 PostgreSQL，见 `modules/services.md`。
 - 全局异常处理器已兜住未捕获异常，生产环境建议改为只捕获自定义业务异常基类（见 `modules/error-handling.md`）。
 
 ## 180 天学习教程
@@ -62,4 +62,4 @@ docs/
 - [数据库衔接实验](tutorial/labs/database-bridge.md)：Day 14～21 完整参考。
 - [环境约定](tutorial/ENVIRONMENT.md) 与 [官方资料](tutorial/SOURCES.md)。
 
-教程中的目标实现与当前运行代码分开：当前设备 CRUD 仍在内存，教程不会自动完成数据库迁移。
+2026-09-21 已补 Day 14～19、21 的代码；[代码运行入口](../backend/exercises/README.md)。Day 20 迁移仍待学习，PostgreSQL 实机验证尚待 Docker 服务启动。

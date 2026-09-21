@@ -83,3 +83,7 @@ def read_admin(user: Annotated[User, Depends(require_admin)]): ...
 - 数据库与 Session → `database-models.md`
 - 路由如何使用这些依赖 → `routing.md`
 - 一次请求的 DI 流转 → `../architecture/request-lifecycle.md`
+
+## 2026-09-21 持久化接线
+
+设备五个路由也注入 get_db。函数实际返回 Iterator[Session]，使用 with SessionLocal() 关闭资源；普通 service 显式接收 db，不把 Depends 当普通函数默认实参。

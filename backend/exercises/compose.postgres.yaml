@@ -1,0 +1,20 @@
+name: atlas-course
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: atlas_lab
+      POSTGRES_DB: atlas_lab
+      POSTGRES_PASSWORD: ${ATLAS_LAB_PASSWORD:?set ATLAS_LAB_PASSWORD}
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - atlas_course_pg:/var/lib/postgresql/data
+      - ./sql:/lessons:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atlas_lab -d atlas_lab"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+volumes:
+  atlas_course_pg:

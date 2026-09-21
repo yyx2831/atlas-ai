@@ -47,3 +47,7 @@ def register_routes(app: FastAPI) -> None:
 - 中间件/日志 → `middleware-logging.md`
 - 异常处理 → `error-handling.md`
 - 完整源码 → 根目录 `ATLAS_AI_项目描述文档.md`
+
+## 2026-09-21 数据库启动生命周期
+
+唯一 app 增加 lifespan，启动调用 init_db 创建缺失表；数据库模块导入本身不建表。测试替换 init_db 与 get_db 使用临时数据库，避免修改用户数据。

@@ -1,7 +1,9 @@
+"""Day 21：service 显式接收 Session；每个写操作拥有一个事务。"""
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+from app.models import Device
 from app.schemas.device import DeviceCreate, DeviceUpdate
 
-_devices: list[dict] = []
-_next_id = 1
 def calculate_total(prices: list[float]) -> float:
     return sum(prices)
 
@@ -19,42 +21,48 @@ def filter_alarm_devices(
     level: str = "critical"
 ) -> list[dict]:
     return [device for device in devices if device.get("level") == level]
-def list_devices() -> list[dict]:
-    return _devices
-def get_device(device_id: int) -> dict | None:
-    for device in _devices:
-        if device["id"] == device_id:
-            return device
-    return None
 
-def create_device(data: DeviceCreate) -> dict:
-    global _next_id
-    device = {
-        "id": _next_id,
-        **data.model_dump(mode="json"),
-    }
-    _next_id += 1
-    _devices.append(device)
+def list_devices(db: Session) -> list[Device]:
+    return list(db.scalars(select(Device).order_by(Device.id)))
+
+def get_device(device_id: int, db: Session) -> Device | None:
+    return db.get(Device, device_id)
+
+def create_device(data: DeviceCreate, db: Session) -> Device:
+    # json 模式将 IP 对象、枚举转为可保存的字符串。
+    device = Device(**data.model_dump(mode='json'))
+    try:
+        db.add(device)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    db.refresh(device)
     return device
 
-
-def update_device(device_id: int, data: DeviceUpdate) -> dict | None:
-    device = get_device(device_id)
+def update_device(device_id: int, data: DeviceUpdate, db: Session) -> Device | None:
+    device = db.get(Device, device_id)
     if device is None:
         return None
-
-    update_data = data.model_dump(
-        exclude_unset=True,
-        exclude_none=True,
-        mode="json",
-    )
-    device.update(update_data)
+    values = data.model_dump(mode='json', exclude_unset=True, exclude_none=True)
+    try:
+        for field, value in values.items():
+            setattr(device, field, value)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    db.refresh(device)
     return device
 
-
-def delete_device(device_id: int) -> bool:
-    device = get_device(device_id)
+def delete_device(device_id: int, db: Session) -> bool:
+    device = db.get(Device, device_id)
     if device is None:
         return False
-    _devices.remove(device)
+    try:
+        db.delete(device)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     return True

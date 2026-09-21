@@ -5,7 +5,7 @@
 
 ## 这是什么项目
 
-`atlas-ai` 是一个 **FastAPI 后端学习 / 演示工程**，用典型分层架构（`api/routes` → `schemas` → `services` → `models` → `database`）实现设备管理、用户、当前用户 DI 演示、外部接口调用、日志与中间件等接口。当前仍以内存假数据为主，数据库表已建好但尚未被 service 真正读写。
+`atlas-ai` 是一个 **FastAPI 后端学习 / 演示工程**，用典型分层架构（`api/routes` → `schemas` → `services` → `models` → `database`）实现设备管理、用户、当前用户 DI 演示、外部接口调用、日志与中间件等接口。设备 CRUD 已持久化；用户认证仍为演示，支持 SQLite 和 PostgreSQL。
 
 - **代码根目录**：`backend/`（uv 工程，`pyproject.toml` 在此）
 - **可导入包**：`backend/app/`（flat layout，`pyproject.toml` 用 `[tool.uv.build-backend]` 指明 `module-name = "app"`）
@@ -52,10 +52,10 @@ uv add <pkg>                          # 加依赖（会写 pyproject.toml 并装
 
 ## 已知坑 / 待办
 
-1. **`device_service.py` 仍是内存假数据**（`_devices` 列表），`GET/POST /devices` 不落库；`models.Device` 表已 `create_all` 建好但 service 没用。改造时把 service 函数签名加 `db: Session = Depends(get_db)` 即可。
-2. **两个 `app.db`**：根目录 `E:\Codes\atlas-ai\app.db` 和 `backend/app.db` 都存在，`DATABASE_URL = "sqlite:///./app.db"` 指向「运行命令所在目录」下的库，注意当前工作目录决定用哪个。
+1. 设备 service 已显式接收 Session；Depends 仅在路由解析。每个写 service 自行 commit/rollback，组合事务需重新设计边界。
+2. 默认 SQLite 路径固定为 backend/app.db；根目录旧 app.db 保留但默认不读取。DATABASE_URL 可切换 PostgreSQL。
 3. **`uv_build` 包指向**：`pyproject.toml` 的 `[tool.uv.build-backend]` 已配置 `module-name="app"`，删/改包目录后必须同步此配置，否则 `uv run fastapi dev` 报 `Expected a Python module at: src/backend/__init__.py`。
-4. **`README.md` 为空占位**，`app/__init__.py` 也为空，暂无内容。
+4. backend/README.md 与 exercises/README.md 提供运行入口。Day 20 Alembic 尚未实现，lifespan 用 init_db 仅建缺失表。
 5. **同步端点（如 `log_test`）经线程池执行**，中间件 `request_timing_middleware` 里 request_id 偶尔为空（contextvar 传递问题），属已知 quirk、无害。
 
 ## 改完代码后必须同步更新文档

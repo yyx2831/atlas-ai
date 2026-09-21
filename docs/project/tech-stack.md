@@ -7,7 +7,7 @@
 | Web 框架 | **FastAPI** | `fastapi[standard]>=0.141.1`（含 uvicorn/Starlette） | `pyproject.toml` dependencies |
 | ORM | **SQLAlchemy 2.0** | `sqlalchemy>=2.0.54`；使用 `Mapped` / `mapped_column` 2.0 风格 | `pyproject.toml`；`app/models/device.py`、`app/database.py` |
 | 数据校验 | **Pydantic v2** | 随 FastAPI 引入；`Field`、`field_validator`、`IPvAnyAddress` | `app/schemas/device.py` |
-| 数据库 | **SQLite** | 本地文件 `app.db`；`DATABASE_URL = "sqlite:///./app.db"`（相对运行目录） | `app/database.py` |
+| 数据库 | **SQLite / PostgreSQL** | 默认固定 backend/app.db；DATABASE_URL 可切到 PostgreSQL + psycopg 3 | `app/database.py` |
 | HTTP 客户端 | **httpx** | `httpx>=0.28.1`；异步 `AsyncClient` | `pyproject.toml`；`app/api/routes/demo.py` |
 | 重试 | **tenacity** | `tenacity>=9.1.4`；`@retry` 装饰器 | `pyproject.toml`；`app/api/routes/demo.py` |
 | 服务器 | **uvicorn** | 由 `fastapi[standard]` 提供；`fastapi dev` 内部调用 | 运行时 |

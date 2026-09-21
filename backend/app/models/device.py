@@ -6,7 +6,11 @@
 - models.Device          -> 数据库表（这一张）
 """
 from sqlalchemy import Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.alarm import Alarm
 
 from app.models import Base
 
@@ -18,3 +22,6 @@ class Device(Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     device_type: Mapped[str] = mapped_column(String(50), nullable=False)
     ip: Mapped[str] = mapped_column(String(64), nullable=False)
+    alarms: Mapped[list['Alarm']] = relationship(
+        back_populates='device', cascade='all, delete-orphan', passive_deletes=True,
+    )

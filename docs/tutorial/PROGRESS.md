@@ -2,7 +2,7 @@
 
 状态只由你验收后更新。代码存在 ≠ 独立掌握；截至 2026-09-19 的静态检查不能代替实操成绩。
 
-建议下一课：Day 14 接力验收，然后 Day 15。已有部分 Day 19 的 ORM 和 Day 9 的 Session 依赖。未发现完整的逐日学习记录，不自动打勾。
+建议下一步：运行已补代码，完成独立验收，再补 Day 20。用户于 2026-09-21 确认已看完 Day 14、15、16、17、18、19、21，但未亲自编码。
 
 状态可填写：未开始 / 练习中 / 待验收 / 已通过 / 硬件待补。每次附笔记链接或提交哈希。
 
@@ -19,14 +19,14 @@
 - [ ] [Day 011 HTTPX 与外部故障](days/day-011.md) — 未确认；存在相关实现，待独立验收；证据：
 - [ ] [Day 012 可关联的应用日志](days/day-012.md) — 未确认；存在相关实现，待独立验收；证据：
 - [ ] [Day 013 中间件与上下文](days/day-013.md) — 未确认；存在相关实现，待独立验收；证据：
-- [ ] [Day 014 现有项目接力验收](days/day-014.md) — 未确认；存在相关实现，待独立验收；证据：
-- [ ] [Day 015 PostgreSQL 与原生 SQL](days/day-015.md) — 未确认；证据：
-- [ ] [Day 016 JOIN 与告警聚合](days/day-016.md) — 未确认；证据：
-- [ ] [Day 017 索引与执行计划](days/day-017.md) — 未确认；证据：
-- [ ] [Day 018 事务与回滚](days/day-018.md) — 未确认；证据：
-- [ ] [Day 019 SQLAlchemy 2.0 与显式 Session](days/day-019.md) — 未确认；存在相关实现，待独立验收；证据：
+- [ ] [Day 014 现有项目接力验收](days/day-014.md) — 已阅读；代码已补；待本人运行和独立验收；证据：[运行入口](../../backend/exercises/README.md)
+- [ ] [Day 015 PostgreSQL 与原生 SQL](days/day-015.md) — 已阅读；代码已补；待本人运行和独立验收；证据：[运行入口](../../backend/exercises/README.md)
+- [ ] [Day 016 JOIN 与告警聚合](days/day-016.md) — 已阅读；代码已补；待本人运行和独立验收；证据：[运行入口](../../backend/exercises/README.md)
+- [ ] [Day 017 索引与执行计划](days/day-017.md) — 已阅读；代码已补；待本人运行和独立验收；证据：[运行入口](../../backend/exercises/README.md)
+- [ ] [Day 018 事务与回滚](days/day-018.md) — 已阅读；代码已补；待本人运行和独立验收；证据：[运行入口](../../backend/exercises/README.md)
+- [ ] [Day 019 SQLAlchemy 2.0 与显式 Session](days/day-019.md) — 已阅读；代码已补；待本人运行和独立验收；证据：[运行入口](../../backend/exercises/README.md)
 - [ ] [Day 020 Alembic 与可追踪结构变更](days/day-020.md) — 未确认；证据：
-- [ ] [Day 021 让设备 CRUD 真正落库](days/day-021.md) — 未确认；证据：
+- [ ] [Day 021 让设备 CRUD 真正落库](days/day-021.md) — 已阅读；代码已补；待本人运行和独立验收；证据：[运行入口](../../backend/exercises/README.md)
 - [ ] [Day 022 Linux 文件与路径](days/day-022.md) — 未确认；证据：
 - [ ] [Day 023 Linux 权限](days/day-023.md) — 未确认；证据：
 - [ ] [Day 024 进程与终止](days/day-024.md) — 未确认；证据：

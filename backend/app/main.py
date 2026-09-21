@@ -14,6 +14,8 @@
 “同一个” app 实例上，所有路由都能正确注册并显示在 /docs。
 """
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
+from app.database import init_db
 
 from app.api.router import register_routes
 from app.core.config import DESCRIPTION, TITLE, VERSION
@@ -22,7 +24,14 @@ from app.core.exceptions import DeviceNotFoundError
 from app.core.middleware import add_request_id, request_timing_middleware
 
 # 1) 创建应用（全工程只此一处）
-app = FastAPI(title=TITLE, description=DESCRIPTION, version=VERSION)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 仅教学建表；create_all 不负责已有字段升级，Day 20 再使用 Alembic。
+    init_db()
+    yield
+
+
+app = FastAPI(title=TITLE, description=DESCRIPTION, version=VERSION, lifespan=lifespan)
 
 # 2) 注册路由（尽早执行，确保即使后续中间件 / 处理器有问题，路由也已挂载）
 register_routes(app)

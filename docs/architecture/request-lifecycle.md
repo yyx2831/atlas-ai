@@ -40,7 +40,7 @@ FastAPI 在调用 `read_me` 前，先解析其依赖 `get_current_user`：
 ## 阶段 3：端点执行（业务逻辑）
 
 - `/me`：直接返回 `user` 字典（序列化由 FastAPI + Pydantic 完成）。
-- `/devices`：端点无业务逻辑，转调 `device_service.list_devices()` 等；service 当前返回内存 `_devices` 列表。
+- `/devices`：端点无业务逻辑，转调 `device_service.list_devices(db)` 等；service 经 Session 查询 ORM，响应通过 from_attributes 序列化。
 - `/external/test`：异步调用 `call_external_api()`（httpx + tenacity 重试），再包装成 JSON 返回。
 - `/log-error`：故意 `1/0` → 进入 `except` → `logger.error("业务发生除零异常", exc_info=True)` → **`raise e` 继续上抛**。
 

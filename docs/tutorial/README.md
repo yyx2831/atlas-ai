@@ -4,7 +4,7 @@
 
 ## 你今天从哪里开始
 
-先看 [START-HERE](START-HERE.md)，完成现有代码的接力验收。默认建议 Day 14 复盘后进入 Day 15；这是根据仓库推断的起点，不代表你已通过前 13 天。
+你已阅读 Day 14～19、21，现已补代码。先按 [代码入口](../../backend/exercises/README.md) 运行并对照理解，再补 Day 20 的迁移。阅读完成不自动等于独立验收通过。
 
 [环境约定](ENVIRONMENT.md) · [学习进度](PROGRESS.md) · [数据库衔接实验](labs/database-bridge.md) · [关键实验手册](labs/key-recipes.md) · [官方资料](SOURCES.md) · [每日记录模板](templates/daily-note.md)
 

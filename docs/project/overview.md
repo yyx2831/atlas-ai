@@ -7,7 +7,7 @@
 ## 当前目标与阶段
 
 - **阶段**：学习 + 演示。代码里保留了多个「Day N」标注的实验接口（`/external/test` 对应 httpx+tenacity，`/log-test`、`/log-error` 对应日志与中间件，`/me/*` 对应 Day9 依赖注入）。
-- **尚未完成**：`device_service` 还是内存假数据，没有真正读写 `Device` 表（数据库表已 `create_all` 建好）。这是下一步最自然的练习。
+- **已完成**：设备 CRUD 接入 Session 持久化，增加 User/Alarm ORM 和 SQL 练习；隔离 SQLite 测试通过，PostgreSQL 实机待验证。
 - **不是**：生产级服务。鉴权是假用户、建表用 `create_all` 而非 Alembic、日志仅 stdout。
 
 ## 分层架构（顶层）
@@ -19,8 +19,8 @@ middleware（request_id 注入 + 耗时统计）
    ↓
 router / 路由层（api/routes）    ← 只管请求/响应与依赖装配
    ↓ 依赖注入（Depends）
-services（业务逻辑）             ← 当前内存假数据
-   ↓（未来）数据库 Session
+services（业务逻辑）             ← 显式接收 Session
+   ↓ 数据库 Session
 models（SQLAlchemy ORM）  ↔  database（引擎/Session）
 schemas（Pydantic 校验）   ← 请求体/响应体
 core（配置/日志/中间件/异常/自定义异常）

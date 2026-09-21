@@ -60,7 +60,7 @@ atlas-ai/                              ← 仓库根
     │   │
     │   ├── services/
     │   │   ├── __init__.py            #   导出 device_service 的 5 个函数
-    │   │   └── device_service.py      #   业务逻辑（★ 内存假数据，未接 DB）
+    │   │   └── device_service.py      #   业务逻辑（SQLAlchemy 持久化）
     │   │
     │   └── utils/
     │       └── __init__.py            #   包标识（docstring，占位）
@@ -81,11 +81,11 @@ atlas-ai/                              ← 仓库根
 | `backend/app/core/middleware.py` | `add_request_id`（request_id 注入）、`request_timing_middleware`（耗时统计） |
 | `backend/app/core/exception_handlers.py` | `device_not_found_handler`、`global_exception_handler`（兜住未捕获异常） |
 | `backend/app/core/exceptions.py` | 自定义异常 `DeviceNotFoundError` |
-| `backend/app/database.py` | SQLite 引擎、`Base.metadata.create_all`、`SessionLocal`、`get_db()` |
+| `backend/app/database.py` | SQLite/PostgreSQL 引擎、显式 init_db、SessionLocal、get_db |
 | `backend/app/dependencies.py` | `User`、`FAKE_USER`、`get_current_user`、`require_admin` |
 | `backend/app/models/device.py` | ORM 模型 `Device` |
 | `backend/app/schemas/device.py` | `DeviceType` 枚举 + `DeviceCreate/Update/Response` |
-| `backend/app/services/device_service.py` | 设备业务函数（内存版） |
+| `backend/app/services/device_service.py` | 设备业务函数（显式 Session） |
 | `backend/app/api/routes/*.py` | 各业务路由（见 `../modules/routing.md`） |
 | `backend/docs/Day9-Dependency-Injection.md` | 依赖注入学习笔记 |
 
@@ -114,3 +114,12 @@ docs/tutorial/
 ```
 
 本次仅新增教程与导航，没有增删业务源码或改变签名，因此保留 `docs/generated/repo-map.md` 的源码地图内容。
+
+## 2026-09-21 新增代码
+
+- backend/app/models/user.py、alarm.py：用户、告警 ORM。
+- backend/exercises/day019_orm.py：临时库 ORM/JOIN/回滚实验。
+- backend/exercises/sql/day015_basics.sql、day016_join.sql、day017_indexes.sql、day018_transactions.sql。
+- backend/exercises/compose.postgres.yaml：仅绑定本机 55432 的 PostgreSQL 实验服务。
+- backend/exercises/README.md：完整运行入口。
+- backend/tests/test_schemas.py、test_device_api.py：校验、CRUD、回滚、跨进程持久化。
