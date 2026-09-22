@@ -5,7 +5,7 @@
 
 ## 这是什么项目
 
-`atlas-ai` 是一个 **FastAPI 后端学习 / 演示工程**，用典型分层架构（`api/routes` → `schemas` → `services` → `models` → `database`）实现设备管理、用户、当前用户 DI 演示、外部接口调用、日志与中间件等接口。设备 CRUD 已持久化；用户认证仍为演示，支持 SQLite 和 PostgreSQL。
+`atlas-ai` 是一个 **FastAPI 后端学习 / 演示工程**，用典型分层架构（`api/routes` → `schemas` → `services` → `models` → `database`）实现设备管理、用户、当前用户 DI 演示、外部接口调用、日志与中间件等接口。当前已扩展为 Vue + JWT + Chat/RAG + Agent/MCP 完整学习应用，支持 SQLite 和 PostgreSQL；入口 README.md 与 docs/index.md。
 
 - **代码根目录**：`backend/`（uv 工程，`pyproject.toml` 在此）
 - **可导入包**：`backend/app/`（flat layout，`pyproject.toml` 用 `[tool.uv.build-backend]` 指明 `module-name = "app"`）
@@ -36,9 +36,9 @@
 
 ## 关键约定（违反会踩坑）
 
-- **路由没有 `/api` 前缀**：`/health`、`/devices`、`/users`、`/me`、`/external/test`、`/log-test`、`/log-error` 都是根级路径。
+- **路由没有 `/api` 前缀**：`/health`、`/devices`、`/auth/login`、`/chat` 等都是根级路径；旧 users/demo 路由未挂载。
 - **`app` 实例全局唯一**：`backend/app/main.py` 是**唯一**创建 `FastAPI` 实例的地方。任何「中间件测试 / 实验」代码都只能 `app.middleware("http")(func)` 注册到这个实例，**绝不能写 `app = FastAPI(...)` 再建一个实例**——否则前面的路由会被覆盖，`/docs` 只剩零星接口（历史真实 bug，已修复）。
-- **依赖注入两件套**：`get_db()`（每请求一个 SQLAlchemy Session）和 `get_current_user()`（当前是假用户）都放在 `app/dependencies.py` + `app/database.py`，端点用 `Annotated[Type, Depends(...)]` 注入。
+- **依赖注入两件套**：`get_db()`（每请求一个 SQLAlchemy Session）和 `get_current_user()`（真实 Account + JWT）都放在 `app/dependencies.py` + `app/database.py`，端点用 `Annotated[Type, Depends(...)]` 注入。
 - **日志带 request_id**：统一用 `from app.core.logging_config import logger`，格式 `时间 | 级别 | request_id | 模块 | 消息`，禁止 `print()`。
 
 ## 常用命令
@@ -56,7 +56,7 @@ uv add <pkg>                          # 加依赖（会写 pyproject.toml 并装
 2. 默认 SQLite 路径固定为 backend/app.db；根目录旧 app.db 保留但默认不读取。DATABASE_URL 可切换 PostgreSQL。
 3. **`uv_build` 包指向**：`pyproject.toml` 的 `[tool.uv.build-backend]` 已配置 `module-name="app"`，删/改包目录后必须同步此配置，否则 `uv run fastapi dev` 报 `Expected a Python module at: src/backend/__init__.py`。
 4. backend/README.md 与 exercises/README.md 提供运行入口。Day 20 Alembic 尚未实现，lifespan 用 init_db 仅建缺失表。
-5. **同步端点（如 `log_test`）经线程池执行**，中间件 `request_timing_middleware` 里 request_id 偶尔为空（contextvar 传递问题），属已知 quirk、无害。
+5. 后端只用单 worker，文档索引锁/任务恢复依赖这一约定。request_id 中间件位于计时中间件外侧。
 
 ## 改完代码后必须同步更新文档
 

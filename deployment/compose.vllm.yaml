@@ -1,0 +1,33 @@
+# Linux + NVIDIA Container Toolkit required. Chat server only; embedding stays separate.
+services:
+  vllm:
+    image: ${VLLM_IMAGE:?Set a tested vllm/vllm-openai image tag}
+    command:
+      - --model
+      - ${VLLM_MODEL:-Qwen/Qwen3-8B}
+      - --served-model-name
+      - atlas-local
+      - --max-model-len
+      - "4096"
+      - --gpu-memory-utilization
+      - "0.85"
+      - --enable-auto-tool-choice
+      - --tool-call-parser
+      - hermes
+    shm_size: 2gb
+    volumes: ["model-cache:/root/.cache/huggingface"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+  backend:
+    environment:
+      LLM_MODE: compatible
+      LLM_BASE_URL: http://vllm:8000/v1
+      LLM_MODEL: atlas-local
+volumes:
+  model-cache:

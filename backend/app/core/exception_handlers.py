@@ -1,4 +1,5 @@
 """全局 / 专用异常处理器。"""
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
@@ -15,7 +16,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
     - 统一返回 JSON 500（而不是把异常抛给 uvicorn）；
     - 用带 request_id 的日志格式记录堆栈；
-    - 阻止 uvicorn 再打印那一长串原生 ASGI Traceback。
+    - 服务日志保留堆栈；ASGI 服务器仍可能再次记录异常。
     注意：HTTPException(404/422/502/504) 由 Starlette 默认处理器接管，不受影响。
     """
     request_id = getattr(request.state, "request_id", "")

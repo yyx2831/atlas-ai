@@ -1,50 +1,62 @@
-"""应用入口：只负责“装配” FastAPI 应用。
+"""Atlas 唯一应用入口。阅读顺序：配置 → 资源生命周期 → 路由 → 中间件。"""
 
-具体逻辑已抽离到独立模块，保持单一职责：
-- app.core.config              应用元数据配置
-- app.core.logging_config     日志与 request_id 上下文
-- app.core.middleware          请求级中间件（含中间件测试）
-- app.core.exception_handlers 异常处理器
-- app.api.router.register_routes 路由聚合挂载
-
-关键修复：原 main.py 末尾的“# ========== 中间件测试 ==========”片段里误写了
-`app = FastAPI(title="Middleware Demo")`，重新创建了一个 FastAPI 实例，
-把前面已挂载的全部路由 / 中间件 / 异常处理器全部覆盖掉了，导致 /docs 只剩
-该片段里的 GET /devices 和 GET /。本版本不再重建 app，中间件统一注册到
-“同一个” app 实例上，所有路由都能正确注册并显示在 /docs。
-"""
-from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from app.database import init_db
-
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from app.api.router import register_routes
-from app.core.config import DESCRIPTION, TITLE, VERSION
-from app.core.exception_handlers import device_not_found_handler, global_exception_handler
-from app.core.exceptions import DeviceNotFoundError
+from app.core.settings import get_settings
+from app.core.exception_handlers import global_exception_handler
 from app.core.middleware import add_request_id, request_timing_middleware
+from app.database import init_db, SessionLocal
+from app.services.runtime import Runtime
+from app.services.accounts import bootstrap_admin
+from app.services.llm import ProviderError
+from sqlalchemy import update
+from app.models.platform import Message, AgentRun
 
-# 1) 创建应用（全工程只此一处）
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 仅教学建表；create_all 不负责已有字段升级，Day 20 再使用 Alembic。
+    # 仅创建新表，不修改已有列。已有数据库不执行删表或自动重置。
     init_db()
-    yield
+    settings = get_settings()
+    with SessionLocal() as db:
+        # 单 worker 应用重启后，把上次中断的任务标为失败，允许用户重新提问。
+        db.execute(
+            update(Message).where(Message.status == "pending").values(status="failed")
+        )
+        db.execute(
+            update(AgentRun).where(AgentRun.status == "running").values(status="failed")
+        )
+        db.commit()
+        if settings.admin_email and settings.admin_password:
+            bootstrap_admin(db, settings.admin_email, settings.admin_password)
+    runtime = Runtime(settings)
+    app.state.runtime = runtime
+    try:
+        yield
+    finally:
+        await runtime.close()
 
 
-app = FastAPI(title=TITLE, description=DESCRIPTION, version=VERSION, lifespan=lifespan)
-
-# 2) 注册路由（尽早执行，确保即使后续中间件 / 处理器有问题，路由也已挂载）
+app = FastAPI(
+    title="Atlas AI",
+    description="设备故障 AI 助手：Chat / RAG / Agent / MCP",
+    version="0.2.0",
+    lifespan=lifespan,
+)
 register_routes(app)
-
-# 3) 注册中间件
-# 请求 id 注入（内层，紧贴端点）
-app.middleware("http")(add_request_id)
-
-# ========== 中间件测试 ==========
-# 测试用中间件：统计请求耗时并打印，验证中间件链正常。
-# 注册到“同一个 app 实例”，绝不再写 app = FastAPI(...) 覆盖应用。
+# 后注册的中间件在外层，request_id 包住计时和所有业务日志。
 app.middleware("http")(request_timing_middleware)
-
-# 4) 注册异常处理器
-app.add_exception_handler(DeviceNotFoundError, device_not_found_handler)
+app.middleware("http")(add_request_id)
 app.add_exception_handler(Exception, global_exception_handler)
+
+
+@app.exception_handler(ProviderError)
+async def provider_error(request, exc):
+    return JSONResponse(status_code=502, content={"detail": str(exc)})
+
+
+@app.exception_handler(TimeoutError)
+async def timeout_error(request, exc):
+    return JSONResponse(status_code=504, content={"detail": "请求达到时间上限，已停止"})

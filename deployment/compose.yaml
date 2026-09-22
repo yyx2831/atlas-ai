@@ -1,0 +1,79 @@
+name: atlas-ai
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: atlas
+      POSTGRES_USER: atlas
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atlas -d atlas"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: ["redis-data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+  qdrant:
+    image: qdrant/qdrant:v1.19.0
+    volumes: ["qdrant-data:/qdrant/storage"]
+    restart: unless-stopped
+  backend:
+    build: ../backend
+    environment:
+      APP_ENV: production
+      DATABASE_URL: postgresql+psycopg://atlas:${POSTGRES_PASSWORD}@postgres:5432/atlas
+      DATA_DIR: /data
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?Set ADMIN_EMAIL in .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      QDRANT_URL: http://qdrant:6333
+      REDIS_URL: redis://redis:6379/0
+      LLM_MODE: ${LLM_MODE:-demo}
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://host.docker.internal:11434/v1}
+      LLM_MODEL: ${LLM_MODEL:-qwen3:8b}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      EMBEDDING_MODE: ${EMBEDDING_MODE:-demo}
+      EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-http://host.docker.internal:11434/v1}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-nomic-embed-text}
+      EMBEDDING_DIMENSION: ${EMBEDDING_DIMENSION:-256}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+      MCP_API_URL: http://127.0.0.1:8000
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes: ["app-data:/data"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      qdrant: {condition: service_started}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=5)"]
+      interval: 15s
+      timeout: 8s
+      start_period: 30s
+      retries: 10
+    restart: unless-stopped
+  web:
+    build: ../frontend
+    ports: ["${BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-8080}:80"]
+    depends_on:
+      backend: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+volumes:
+  postgres-data:
+  redis-data:
+  qdrant-data:
+  app-data:

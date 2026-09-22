@@ -3,6 +3,7 @@
 原本这些 @app.middleware 写在 main.py，现抽离为独立函数，
 在 main.py 里用 app.middleware("http")(func) 注册到“同一个” app 实例上。
 """
+
 import time
 import uuid
 

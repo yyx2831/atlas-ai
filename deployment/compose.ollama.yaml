@@ -1,0 +1,15 @@
+# Merge with compose.yaml. Choose and pin OLLAMA_IMAGE for your machine.
+services:
+  ollama:
+    image: ${OLLAMA_IMAGE:?Set a tested ollama/ollama image tag}
+    volumes: ["ollama-data:/root/.ollama"]
+    restart: unless-stopped
+  backend:
+    environment:
+      LLM_MODE: compatible
+      LLM_BASE_URL: http://ollama:11434/v1
+      EMBEDDING_MODE: compatible
+      EMBEDDING_BASE_URL: http://ollama:11434/v1
+      EMBEDDING_DIMENSION: 768
+volumes:
+  ollama-data:

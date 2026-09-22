@@ -2,6 +2,7 @@
 
 这些原本内联在 main.py，现抽离为独立 router，保持 main.py 精简。
 """
+
 import httpx
 from fastapi import APIRouter, HTTPException
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
@@ -13,7 +14,9 @@ router = APIRouter(tags=["演示 / 实验"])
 
 @router.get("/", include_in_schema=False)
 def root():
-    return {"message": "Welcome to Atlas AI API. Visit /docs for OpenAPI documentation."}
+    return {
+        "message": "Welcome to Atlas AI API. Visit /docs for OpenAPI documentation."
+    }
 
 
 # ========== 外部接口调用（httpx + tenacity 重试） ==========
@@ -39,7 +42,9 @@ async def external_test():
     except httpx.TimeoutException:
         raise HTTPException(status_code=504, detail="外部接口调用超时，重试后依然失败")
     except httpx.HTTPStatusError as e:
-        raise HTTPException(status_code=502, detail=f"外部接口错误码：{e.response.status_code}")
+        raise HTTPException(
+            status_code=502, detail=f"外部接口错误码：{e.response.status_code}"
+        )
     except httpx.RequestError as e:
         raise HTTPException(status_code=502, detail=f"网络异常：{str(e)}")
 

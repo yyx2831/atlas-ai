@@ -12,6 +12,39 @@ _(无顶层类/函数)_
 
 ---
 
+## `app/cli.py`
+
+> 首次初始化：uv run python -m app.cli init --email you@example.com --demo。
+
+**imports**
+
+```
+import argparse
+import asyncio
+from datetime import datetime, timedelta, timezone
+from getpass import getpass
+from sqlalchemy import select
+from app.core.logging_config import logger
+from app.core.settings import get_settings
+from app.database import init_db, SessionLocal
+from app.models import Device, Alarm
+from app.models.platform import Account
+from app.schemas.platform import AccountInput
+from app.services.accounts import create_account
+from app.services.runtime import Runtime
+from app.services.knowledge import upload
+```
+
+**symbols**
+
+```
+SAMPLE_MANUAL = ...
+ async def seed(db, account)
+ def main()
+```
+
+---
+
 ## `app/database.py`
 
 > Day 19/21：连接配置与每请求一个 Session；导入时不建表。
@@ -19,13 +52,13 @@ _(无顶层类/函数)_
 **imports**
 
 ```
-import os
 from collections.abc import Iterator
 from pathlib import Path
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine, make_url
 from sqlalchemy.orm import Session, sessionmaker
 from app.models import Base
+from app.core.settings import get_settings
 ```
 
 **symbols**
@@ -44,42 +77,55 @@ SessionLocal = ...
 
 ## `app/dependencies.py`
 
-> FastAPI 依赖（Dependency Injection）示例。
+> HTTP 依赖：验证签名、查账户状态、检查权限，再进入业务函数。
 
 **imports**
 
 ```
 from typing import Annotated
-from fastapi import Depends, Header, HTTPException, status
-from pydantic import BaseModel
+import jwt
+from fastapi import Depends, HTTPException, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.core.security import decode_token
+from app.models.platform import Account
 ```
 
 **symbols**
 
 ```
-class User(BaseModel):
-FAKE_USER = ...
- def get_current_user(x_user_id)
- def require_admin(current_user)
+bearer = ...
+DbSession = ...
+ def get_current_user(db, credentials)
+CurrentUser = ...
+ def require_admin(user)
+AdminUser = ...
+ def get_runtime(request)
 ```
 
 ---
 
 ## `app/main.py`
 
-> 应用入口：只负责“装配” FastAPI 应用。
+> Atlas 唯一应用入口。阅读顺序：配置 → 资源生命周期 → 路由 → 中间件。
 
 **imports**
 
 ```
-from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from app.database import init_db
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from app.api.router import register_routes
-from app.core.config import DESCRIPTION, TITLE, VERSION
-from app.core.exception_handlers import device_not_found_handler, global_exception_handler
-from app.core.exceptions import DeviceNotFoundError
+from app.core.settings import get_settings
+from app.core.exception_handlers import global_exception_handler
 from app.core.middleware import add_request_id, request_timing_middleware
+from app.database import init_db, SessionLocal
+from app.services.runtime import Runtime
+from app.services.accounts import bootstrap_admin
+from app.services.llm import ProviderError
+from sqlalchemy import update
+from app.models.platform import Message, AgentRun
 ```
 
 **symbols**
@@ -87,6 +133,33 @@ from app.core.middleware import add_request_id, request_timing_middleware
 ```
 @asynccontextmanager async def lifespan(app)
 app = ...
+@<decorator> async def provider_error(request, exc)
+@<decorator> async def timeout_error(request, exc)
+```
+
+---
+
+## `app/mcp_server.py`
+
+> 独立 stdio MCP 服务：通过受 JWT 保护的 HTTP API 获取数据，不直连数据库。
+
+**imports**
+
+```
+import os
+from typing import Any
+import httpx
+from mcp.server.fastmcp import FastMCP
+```
+
+**symbols**
+
+```
+mcp = ...
+ async def request(path, params)
+@<decorator> async def get_device(device_id)
+@<decorator> async def get_alarm(device_id, limit)
+@<decorator> async def search_manual(query)
 ```
 
 ---
@@ -101,14 +174,13 @@ _(无顶层类/函数)_
 
 ## `app/api/router.py`
 
-> 路由聚合：把各业务 router 统一挂载到 app。
+> 所有 URL 在这里集中注册；backend 无 /api 前缀，代理负责去前缀。
 
 **imports**
 
 ```
 from fastapi import FastAPI
-from app.api.routes import demo_router, devices_router, health_router, users_router
-from app.api.routes import protected
+from app.api.routes import devices, protected, auth, knowledge, chat, agent, alarms, system
 ```
 
 **symbols**
@@ -134,6 +206,109 @@ from users import router
 
 ```
 __all__ = ...
+```
+
+---
+
+## `app/api/routes/agent.py`
+
+**imports**
+
+```
+from fastapi import APIRouter, HTTPException, Request
+from sqlalchemy import select
+from app.dependencies import CurrentUser, DbSession
+from app.models import Device
+from app.models.platform import AgentRun
+from app.schemas.platform import AgentInput
+from app.services.agent import run_agent
+```
+
+**symbols**
+
+```
+router = ...
+@<decorator> async def run(data, request, db, user)
+@<decorator> def runs(db, user)
+```
+
+---
+
+## `app/api/routes/alarms.py`
+
+**imports**
+
+```
+from fastapi import APIRouter, HTTPException, Query
+from sqlalchemy import select
+from app.dependencies import DbSession, CurrentUser, AdminUser
+from app.models import Device, Alarm
+from app.schemas.platform import AlarmInput
+```
+
+**symbols**
+
+```
+router = ...
+@<decorator> def get_alarms(device_id, db, user, limit)
+@<decorator> def add_alarm(device_id, data, db, user)
+```
+
+---
+
+## `app/api/routes/auth.py`
+
+**imports**
+
+```
+from fastapi import APIRouter, Request
+from sqlalchemy import select
+from app.core.security import DUMMY_HASH, create_token, password_hasher
+from app.dependencies import AdminUser, CurrentUser, DbSession
+from app.models.platform import Account
+from app.schemas.platform import AccountInput, LoginInput
+from app.services.accounts import create_account
+```
+
+**symbols**
+
+```
+router = ...
+@<decorator> def login(data, request, db)
+@<decorator> def me(user)
+@<decorator> def add_account(data, db, admin)
+@<decorator> def users(db, admin)
+```
+
+---
+
+## `app/api/routes/chat.py`
+
+**imports**
+
+```
+import asyncio
+import json
+from time import perf_counter
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import StreamingResponse
+from sqlalchemy import delete, select
+from app.dependencies import CurrentUser, DbSession
+from app.models.platform import Conversation, Message
+from app.schemas.platform import ChatInput
+from app.services import chat
+from app.services.llm import ProviderError
+```
+
+**symbols**
+
+```
+router = ...
+@<decorator> def conversations(db, user)
+@<decorator> def history(identifier, db, user)
+@<decorator> def remove(identifier, db, user)
+@<decorator> async def chat(data, request, db, user)
+@<decorator> async def stream(data, request, db, user)
 ```
 
 ---
@@ -172,16 +347,16 @@ router = ...
 from typing import Annotated
 from sqlalchemy.orm import Session
 from app.database import get_db
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from app.schemas.device import DeviceCreate, DeviceUpdate, DeviceResponse
 from app.services import device_service
+from app.dependencies import get_current_user, require_admin
 ```
 
 **symbols**
 
 ```
 DbSession = ...
- def verify_device_token(x_device_token)
 router = ...
 @<decorator> def list_devices(db)
 @<decorator> def get_device(device_id, db)
@@ -209,29 +384,78 @@ router = ...
 
 ---
 
-## `app/api/routes/protected.py`
-
-> 演示路由：把 Day9 的两个依赖用起来。
+## `app/api/routes/knowledge.py`
 
 **imports**
 
 ```
-from typing import Annotated
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from app.database import get_db
-from app.dependencies import User, get_current_user, require_admin
+import asyncio
+from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi.responses import FileResponse
+from sqlalchemy import delete, select
+from app.dependencies import CurrentUser, DbSession
+from app.models.platform import Chunk, Document
+from app.services import knowledge
 ```
 
 **symbols**
 
 ```
 router = ...
-DbSession = ...
-CurrentUser = ...
-@<decorator> def read_me(user)
-@<decorator> def read_admin(user)
-@<decorator> def ping_db(db)
+ def summary(document)
+@<decorator> def documents(db, user)
+@<decorator> async def upload(request, db, user, file, product, version)
+@<decorator> def detail(identifier, db, user)
+@<decorator> def original(identifier, request, db, user)
+@<decorator> async def reindex(identifier, request, db, user)
+@<decorator> async def remove(identifier, request, db, user)
+@<decorator> async def search(request, db, user, q, top_k, product, version)
+```
+
+---
+
+## `app/api/routes/protected.py`
+
+> 保留 /me 学习入口，身份现在来自真实 JWT。
+
+**imports**
+
+```
+from fastapi import APIRouter
+from sqlalchemy import text
+from app.dependencies import CurrentUser, AdminUser, DbSession
+```
+
+**symbols**
+
+```
+router = ...
+@<decorator> def me(user)
+@<decorator> def admin(user)
+@<decorator> def ping_db(db, user)
+```
+
+---
+
+## `app/api/routes/system.py`
+
+**imports**
+
+```
+import asyncio
+from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
+from app.dependencies import DbSession, CurrentUser
+```
+
+**symbols**
+
+```
+router = ...
+@<decorator> def health()
+@<decorator> async def ready(request, db)
+@<decorator> def info(request, user)
 ```
 
 ---
@@ -354,6 +578,58 @@ from app.core.logging_config import logger, request_id_var
 
 ---
 
+## `app/core/security.py`
+
+> 密码只保存 Argon2 哈希；JWT 中只放身份，不相信客户端传来的角色。
+
+**imports**
+
+```
+import secrets
+from datetime import datetime, timedelta, timezone
+import jwt
+from pwdlib import PasswordHash
+from app.core.settings import get_settings
+```
+
+**symbols**
+
+```
+password_hasher = ...
+DUMMY_HASH = ...
+ def signing_key()
+ def create_token(account_id)
+ def decode_token(token)
+```
+
+---
+
+## `app/core/settings.py`
+
+> 所有可修改参数集中在这里；环境变量 > backend/.env > 默认值。
+
+**imports**
+
+```
+from functools import lru_cache
+from pathlib import Path
+from typing import Literal
+from pydantic import Field, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+```
+
+**symbols**
+
+```
+BACKEND_DIR = ...
+class Settings(BaseSettings):
+  @model_validator(...) def validate_configuration(self)
+  model_config = ...
+@lru_cache def get_settings()
+```
+
+---
+
 ## `app/models/__init__.py`
 
 > SQLAlchemy ORM 模型包。
@@ -365,6 +641,7 @@ from sqlalchemy.orm import declarative_base
 from app.models.device import Device
 from app.models.user import User
 from app.models.alarm import Alarm
+from app.models.platform import Account, Document, Chunk, Conversation, Message, AgentRun
 ```
 
 **symbols**
@@ -417,6 +694,42 @@ from app.models import Base
 
 ```
 class Device(Base):
+  __tablename__ = ...
+```
+
+---
+
+## `app/models/platform.py`
+
+> AI 功能的新表；保留旧 User/Device 表，避免破坏前面的学习数据。
+
+**imports**
+
+```
+from datetime import datetime, timezone
+from uuid import uuid4
+from sqlalchemy import JSON, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column
+from app.models import Base
+```
+
+**symbols**
+
+```
+ def now_iso()
+ def new_id()
+class Account(Base):
+  __tablename__ = ...
+class Document(Base):
+  __tablename__ = ...
+  __table_args__ = ...
+class Chunk(Base):
+  __tablename__ = ...
+class Conversation(Base):
+  __tablename__ = ...
+class Message(Base):
+  __tablename__ = ...
+class AgentRun(Base):
   __tablename__ = ...
 ```
 
@@ -487,6 +800,34 @@ class DeviceResponse(BaseModel):
 
 ---
 
+## `app/schemas/platform.py`
+
+> HTTP 输入模型：长度、范围与枚举在进入业务层之前验证。
+
+**imports**
+
+```
+from typing import Literal
+from pydantic import BaseModel, ConfigDict, Field
+```
+
+**symbols**
+
+```
+class LoginInput(BaseModel):
+class AccountInput(LoginInput):
+class ChatInput(BaseModel):
+class AgentInput(BaseModel):
+class AlarmInput(BaseModel):
+class DeviceToolInput(BaseModel):
+  model_config = ...
+class AlarmToolInput(DeviceToolInput):
+class ManualToolInput(BaseModel):
+  model_config = ...
+```
+
+---
+
 ## `app/services/__init__.py`
 
 > 业务逻辑层。
@@ -501,6 +842,97 @@ from app.services.device_service import create_device, delete_device, get_device
 
 ```
 __all__ = ...
+```
+
+---
+
+## `app/services/accounts.py`
+
+**imports**
+
+```
+from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+from app.core.security import password_hasher
+from app.models.platform import Account
+from app.schemas.platform import AccountInput
+```
+
+**symbols**
+
+```
+ def create_account(db, data)
+ def bootstrap_admin(db, email, password)
+```
+
+---
+
+## `app/services/agent.py`
+
+> 有界 Agent：模型提出调用 → 参数验证 → 工具结果回填 → 继续或结束。
+
+**imports**
+
+```
+import asyncio
+import json
+from time import perf_counter
+from app.services.tools import TOOL_SCHEMAS, validate_call, execute_local
+from app.services.agent_graph import run_graph
+```
+
+**symbols**
+
+```
+ async def run_agent(db, runtime, owner_id, data, token)
+```
+
+---
+
+## `app/services/agent_graph.py`
+
+> 将手写循环等价表达为 State / Node / Conditional Edge，复用同一执行器。
+
+**imports**
+
+```
+from typing import TypedDict
+from langgraph.graph import StateGraph, START, END
+```
+
+**symbols**
+
+```
+class AgentState(TypedDict):
+ async def run_graph(initial, decide, execute, max_iterations)
+```
+
+---
+
+## `app/services/chat.py`
+
+> 聊天状态与引用校验。状态写入独立 Session，客户端断流也不冒充成功。
+
+**imports**
+
+```
+import re
+from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+from app.models.platform import Conversation, Message
+from app.services.knowledge import search
+```
+
+**symbols**
+
+```
+ def conversation_for(db, owner_id, identifier)
+ async def prepare(db, runtime, owner_id, data)
+ def validate_citations(answer, sources)
+ def save_answer(bind, message_id, answer, status, citations, metrics)
 ```
 
 ---
@@ -529,6 +961,209 @@ from app.schemas.device import DeviceCreate, DeviceUpdate
  def create_device(data, db)
  def update_device(device_id, data, db)
  def delete_device(device_id, db)
+```
+
+---
+
+## `app/services/knowledge.py`
+
+> 上传→解析→切块→向量写入；SQL 保存状态，失败文档不会参与回答。
+
+**imports**
+
+```
+import asyncio
+import hashlib
+from io import BytesIO
+from pathlib import Path
+from uuid import uuid4
+from fastapi import HTTPException
+from pypdf import PdfReader
+from sqlalchemy import delete, select, func
+from sqlalchemy.orm import Session
+from app.models.platform import Chunk, Document
+from app.services.retrieval import bm25, rrf
+```
+
+**symbols**
+
+```
+ def parse_document(filename, content, max_chars)
+ def split_text(text, size, overlap)
+ def owned_document(db, identifier, owner_id)
+ def document_path(runtime, document)
+ async def upload(db, runtime, owner_id, filename, content, product, version)
+ async def index_pages(db, runtime, document, pages)
+ async def search(db, runtime, owner_id, query, top_k, product, version)
+```
+
+---
+
+## `app/services/llm.py`
+
+> 兼容 API 与演示模型共用接口；业务层不依赖某一家厂商 SDK。
+
+**imports**
+
+```
+import asyncio
+import hashlib
+import json
+import math
+import re
+from collections import Counter
+from collections.abc import AsyncIterator
+import httpx
+from app.core.settings import Settings
+```
+
+**symbols**
+
+```
+class ProviderError(Exception):
+ def tokens(text)
+class LLMProvider():
+   def __init__(self, settings)
+   async def close(self)
+   def headers(self, key)
+   async def post(self, url, body, key)
+   async def complete(self, messages, tools)
+   async def stream(self, messages)
+   def demo_response(self, messages, tools)
+   async def embed(self, texts)
+```
+
+---
+
+## `app/services/mcp_client.py`
+
+> MCP adapter：凭据仅传给本次受控子进程，不放在工具参数或模型消息中。
+
+**imports**
+
+```
+import json
+import os
+import sys
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+from app.core.settings import BACKEND_DIR
+```
+
+**symbols**
+
+```
+ async def execute_mcp(name, arguments, token, api_url)
+```
+
+---
+
+## `app/services/retrieval.py`
+
+> BM25 → RRF 融合 → 可选 CrossEncoder；每一步独立，方便替换。
+
+**imports**
+
+```
+import math
+from collections import Counter
+from threading import Lock
+from app.services.llm import tokens
+```
+
+**symbols**
+
+```
+ def bm25(query, texts)
+ def rrf(rankings)
+class Reranker():
+   def __init__(self, model)
+   def rank(self, query, candidates)
+```
+
+---
+
+## `app/services/runtime.py`
+
+> 应用生命周期资源：只创建一次模型 HTTP 客户端、向量库与限流器。
+
+**imports**
+
+```
+import hashlib
+import time
+from collections import deque
+from threading import Lock
+from fastapi import HTTPException
+from redis import Redis
+from app.core.settings import Settings
+from app.services.llm import LLMProvider
+from app.services.vector_store import VectorStore
+from app.services.retrieval import Reranker
+```
+
+**symbols**
+
+```
+class LoginLimiter():
+   def __init__(self, url)
+   def check(self, address)
+class Runtime():
+   def __init__(self, settings)
+   async def close(self)
+```
+
+---
+
+## `app/services/tools.py`
+
+> Agent 的工具白名单。无 eval、任意 SQL、Shell 或真实设备写操作。
+
+**imports**
+
+```
+import json
+from fastapi import HTTPException
+from sqlalchemy import select
+from app.models import Device, Alarm
+from app.schemas.platform import DeviceToolInput, AlarmToolInput, ManualToolInput
+from app.services.knowledge import search
+```
+
+**symbols**
+
+```
+TOOL_MODELS = ...
+TOOL_DESCRIPTIONS = ...
+TOOL_SCHEMAS = ...
+ def validate_call(name, arguments, device_id)
+ async def execute_local(name, arguments, db, runtime, owner_id)
+```
+
+---
+
+## `app/services/vector_store.py`
+
+> Qdrant 本地与服务器模式；权限过滤必须在检索时执行。
+
+**imports**
+
+```
+import hashlib
+from threading import RLock
+from qdrant_client import QdrantClient, models
+from app.core.settings import Settings
+```
+
+**symbols**
+
+```
+class VectorStore():
+   def __init__(self, settings)
+   def upsert(self, chunks, vectors, owner_id, document)
+   def search(self, vector, owner_id, product, version, limit)
+   def delete(self, document_id)
+   def close(self)
 ```
 
 ---
@@ -575,6 +1210,76 @@ from app.models import Alarm, Device, User
 
 ---
 
+## `scripts/benchmark.py`
+
+> 测量 Atlas SSE；token 数必须来自模型服务，不能用字符数代替。
+
+**imports**
+
+```
+import argparse
+import getpass
+import json
+from time import perf_counter
+import httpx
+```
+
+**symbols**
+
+```
+ def measure(client, headers, question)
+ def main()
+```
+
+---
+
+## `tests/conftest.py`
+
+> 所有测试都使用临时 SQL 库、内存向量库和固定演示模型。
+
+**imports**
+
+```
+import os
+from tempfile import TemporaryDirectory
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session, sessionmaker
+from app.database import build_engine, get_db, init_db
+from app.core.security import create_token, password_hasher
+from app.models.platform import Account
+import app.main
+```
+
+**symbols**
+
+```
+_data = ...
+@fixture def db_engine(tmp_path)
+@fixture def headers()
+@fixture def viewer_headers()
+@fixture def client(db_engine, monkeypatch)
+```
+
+---
+
+## `tests/test_chat_failures.py`
+
+**imports**
+
+```
+from app.services.llm import ProviderError
+```
+
+**symbols**
+
+```
+ def test_failed_stream_saved_and_can_continue(client, headers, monkeypatch)
+ def test_login_rate_limit(client)
+```
+
+---
+
 ## `tests/test_device_api.py`
 
 > 使用临时文件数据库；不连接或清空用户 app.db。
@@ -587,13 +1292,10 @@ import subprocess
 import sys
 from pathlib import Path
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy import select, func, event
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
-import app.main
-from app.database import build_engine, get_db, init_db
-from app.models import Alarm, Device, User
+from app.models import Alarm, Device
 from app.schemas.device import DeviceCreate
 from app.services import device_service
 ```
@@ -601,14 +1303,85 @@ from app.services import device_service
 **symbols**
 
 ```
-HEADERS = ...
 BODY = ...
-@fixture def db_engine(tmp_path)
-@fixture def client(db_engine, monkeypatch)
- def test_crud_and_persistence(client, db_engine)
- def test_guards_and_validation(client)
+ def test_crud_and_persistence(client, db_engine, headers)
+ def test_guards_and_validation(client, headers)
  def test_failed_write_rolls_back_entire_transaction(db_engine)
  def test_restarted_process_reads_same_database(tmp_path)
+```
+
+---
+
+## `tests/test_mcp_transport.py`
+
+> 真实 stdio MCP 子进程测试；HTTP stub 验证令牌和三种返回类型。
+
+**imports**
+
+```
+import asyncio
+import json
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from threading import Thread
+from app.services.mcp_client import execute_mcp
+```
+
+**symbols**
+
+```
+ def test_mcp_process_forwards_authenticated_http(monkeypatch)
+```
+
+---
+
+## `tests/test_platform.py`
+
+**imports**
+
+```
+import json
+import asyncio
+import httpx
+import pytest
+from app.services.knowledge import split_text, parse_document
+from app.services.retrieval import bm25, rrf
+from app.services.chat import validate_citations
+from app.services.llm import ProviderError
+from app.services.tools import validate_call
+```
+
+**symbols**
+
+```
+ def upload(client, headers, text)
+ def test_auth_and_roles(client, headers, viewer_headers)
+ def test_knowledge_citations_isolation_and_delete(client, headers, viewer_headers)
+ def test_stream_and_empty_knowledge(client, headers)
+@<decorator> def test_agent_calls_three_tools(client, headers, engine)
+ def test_index_failure_not_searchable(client, headers, monkeypatch)
+ def test_invalid_input_and_helpers(client, headers)
+ def test_compatible_provider_contract(client, monkeypatch)
+```
+
+---
+
+## `tests/test_provider_stream.py`
+
+**imports**
+
+```
+import asyncio
+import httpx
+import pytest
+from app.core.settings import Settings
+from app.services.llm import LLMProvider, ProviderError
+```
+
+**symbols**
+
+```
+ def test_compatible_sse_content_and_usage()
+ def test_truncated_sse_is_failure()
 ```
 
 ---

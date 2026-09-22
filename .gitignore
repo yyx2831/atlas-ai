@@ -27,3 +27,16 @@ env/
 # ---- OS ----
 .DS_Store
 Thumbs.db
+
+# Application secrets and generated data (existing tracked databases are preserved)
+.env
+.env.*
+!.env.example
+node_modules/
+.data/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite3
+playwright-report/
+test-results/
