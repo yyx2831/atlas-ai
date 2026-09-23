@@ -34,3 +34,5 @@ atlas-ai/
 ```
 
 `backend/.data`、`.env`、node_modules、dist 不提交。默认数据库 `backend/app.db`；根目录旧 app.db 不再默认读取。历史已跟踪数据库仍保留，不自动删除。
+
+Agent/MCP 深入教程位于 `docs/guides/agent-mcp/`：README 导航、完整教程、逐日章节和 `labs/` 可运行实验。示例使用独立虚构数据，Day 24 可显式连接 Atlas。

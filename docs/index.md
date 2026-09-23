@@ -4,6 +4,7 @@
 
 - [启动与功能](../README.md)
 - [45 天逐日代码导读](QUICKSTART-45.md)
+- [Day 17～24：Agent + MCP 完整实操教程](guides/agent-mcp/README.md)：8 天详解、离线实验、真实 MCP 与 Atlas 联调。
 - [代码维护：如何修改](MAINTENANCE.md)
 - [部署与排障](DEPLOYMENT.md)
 - [真实模型与 GPU](LOCAL-MODELS.md)
