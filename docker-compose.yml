@@ -1,0 +1,28 @@
+# Atlas AI 部署根入口。
+#
+# 真正的服务定义都放在 deployment/ 下，这里只做"聚合 + 覆盖"，
+# 对应教程 Day 25~32 的 `docker compose up -d`。
+#
+# 用法（在项目根目录 E:/Codes/atlas-ai 执行）：
+#
+#   1) 先准备环境变量（必填项见 deployment/.env.example）：
+#        cp deployment/.env.example .env
+#        # 然后编辑 .env，填入 POSTGRES_PASSWORD / JWT_SECRET / ADMIN_EMAIL / ADMIN_PASSWORD
+#
+#   2) 基础栈（demo 模式，不需要 GPU / 不需要本地模型）：
+#        docker compose up -d
+#
+#   3) 接本机 Ollama（教程 Day 33/34）：
+#        docker compose -f docker-compose.yml -f deployment/compose.ollama.yaml up -d
+#        # 选一个已测试的 ollama 镜像，例如：
+#        #   OLLAMA_IMAGE=ollama/ollama:0.30.0 docker compose -f docker-compose.yml -f deployment/compose.ollama.yaml up -d
+#
+#   4) 接 vLLM（教程 Day 37/38，需要 Linux + NVIDIA Container Toolkit）：
+#        VLLM_IMAGE=vllm/vllm-openai:v0.8.5 VLLM_MODEL=Qwen/Qwen3-4B \
+#          docker compose -f docker-compose.yml -f deployment/compose.vllm.yaml up -d
+#
+# 注：include 的相对路径以本文件所在目录（项目根）解析，
+#     deployment/compose.yaml 内部的 build: ../backend 也会正确指向 backend/。
+
+include:
+  - deployment/compose.yaml
